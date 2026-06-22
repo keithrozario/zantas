@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zantas Cycling Trainer Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-bicycle logo-icon"></i>
+                <h1>ZANTAS</h1>
+            </div>
+            <div class="status-panel">
+                <span id="conn-status" class="badge disconnected">
+                    <i class="fa-solid fa-circle-dot"></i> Connecting Server
+                </span>
+                <span id="ble-status" class="badge disconnected">
+                    <i class="fa-solid fa-bluetooth"></i> HRM Offline
+                </span>
+                <span id="sim-indicator" class="badge sim-mode hidden">
+                    <i class="fa-solid fa-microchip"></i> SIMULATOR
+                </span>
+                <button id="settings-btn" class="header-btn">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+                <button id="profile-btn" class="header-btn">
+                    <i class="fa-solid fa-user"></i> Profile
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <main class="grid">
+            <!-- Heart Rate Monitor Card -->
+            <div class="card hr-card">
+                <div class="card-header">
+                    <h2>Heart Rate</h2>
+                    <i class="fa-solid fa-heart pulse-icon" id="heart-icon"></i>
+                </div>
+                <div class="hr-display">
+                    <div class="hr-circle-wrap">
+                        <svg class="hr-progress" viewBox="0 0 100 100">
+                            <circle class="bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="bar" cx="50" cy="50" r="45" id="hr-circle-bar"></circle>
+                        </svg>
+                        <div class="hr-value-container">
+                            <span id="hr-val" class="hr-value">--</span>
+                            <span class="hr-unit">BPM</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hr-footer">
+                    <div class="stat-box">
+                        <span class="label">Zone</span>
+                        <span id="hr-zone" class="val">-</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">Max HR</span>
+                        <span class="val max-hr-val">190 bpm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HRV Monitor Card -->
+            <div class="card hrv-card">
+                <div class="card-header">
+                    <h2>Heart Rate Variability</h2>
+                    <i class="fa-solid fa-wave-square hrv-icon"></i>
+                </div>
+                <div class="hrv-display">
+                    <div class="hrv-value-container">
+                        <span id="hrv-val" class="hrv-value">--</span>
+                        <span class="hrv-unit">ms</span>
+                        <span class="hrv-metric">RMSSD</span>
+                    </div>
+                    <div class="hrv-status" id="hrv-status-desc">Collecting data...</div>
+                    <div class="hrv-progress-bar-container">
+                        <div class="hrv-progress-bar" id="hrv-progress-bar"></div>
+                    </div>
+                </div>
+                <div class="hrv-footer-info">
+                    <p><i class="fa-solid fa-circle-info"></i> Higher RMSSD indicates greater parasympathetic activity and cardiovascular fitness.</p>
+                </div>
+            </div>
+
+            <!-- Session Controls -->
+            <div class="card controls-card">
+                <div class="card-header">
+                    <h2>Training Session</h2>
+                    <i class="fa-solid fa-stopwatch stopwatch-icon"></i>
+                </div>
+                <div class="session-stats">
+                    <div class="stat-row">
+                        <span class="label">Elapsed Time:</span>
+                        <span id="timer-val" class="val-mono">00:00:00</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="label">Average Heart Rate:</span>
+                        <span id="avg-hr-val" class="val-mono">-- bpm</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="label">HRV Baseline:</span>
+                        <span id="avg-hrv-val" class="val-mono">-- ms</span>
+                    </div>
+                </div>
+                <div class="control-actions">
+                    <button id="session-btn" class="btn btn-primary">
+                        <i class="fa-solid fa-play"></i> Start Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Timeline / ECG Graph -->
+            <div class="card graph-card">
+                <div class="card-header">
+                    <h2>Interval Timeline (Last 60s)</h2>
+                    <div class="graph-legend">
+                        <span class="legend-item"><span class="color-dot rri"></span>RR Interval (ms)</span>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="rri-canvas"></canvas>
+                </div>
+                <div class="graph-footer">
+                    <span id="beats-count">0 beats recorded in window</span>
+                    <span id="window-status">Pruning > 60s</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>HRM Device Setup</h2>
+                <span class="close-btn" id="close-settings">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="hrm-select">Select Heart Rate Monitor</label>
+                    <div class="input-row">
+                        <select id="hrm-select">
+                            <option value="simulator">Simulated HRM (Built-in)</option>
+                        </select>
+                        <button id="scan-btn" class="btn btn-secondary" title="Scan for devices">
+                            <i class="fa-solid fa-arrows-rotate" id="scan-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Athlete Profile & HR Zones</h2>
+                <span class="close-btn" id="close-profile">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="max-hr-input">Max Heart Rate (BPM)</label>
+                    <input type="number" id="max-hr-input" value="190" min="100" max="220">
+                </div>
+                
+                <div class="setting-group font-small" style="margin-top: 15px;">
+                    <label>Heart Rate Zones (% of Max HR)</label>
+                    <div class="zone-input-row">
+                        <span>Z1: &lt; <input type="number" id="z1-limit" value="60" class="zone-pct">%</span>
+                        <span>Z2: &lt; <input type="number" id="z2-limit" value="70" class="zone-pct">%</span>
+                    </div>
+                    <div class="zone-input-row" style="margin-top: 8px;">
+                        <span>Z3: &lt; <input type="number" id="z3-limit" value="80" class="zone-pct">%</span>
+                        <span>Z4: &lt; <input type="number" id="z4-limit" value="90" class="zone-pct">%</span>
+                    </div>
+                    <div class="zone-input-row" style="margin-top: 8px;">
+                        <span>Z5: &lt; <input type="number" id="z5-limit" value="100" class="zone-pct">%</span>
+                        <span style="visibility: hidden;">Placeholder</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Entry -->
+    <script src="app.js"></script>
+</body>
+</html>

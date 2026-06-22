@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+zantas.egg-info/PKG-INFO
+zantas.egg-info/SOURCES.txt
+zantas.egg-info/dependency_links.txt
+zantas.egg-info/requires.txt
+zantas.egg-info/top_level.txt

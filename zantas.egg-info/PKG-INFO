@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: zantas
+Version: 0.1.0
+Summary: A Zwift-equivalent cycling trainer application
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: bleak>=0.21.0
+Requires-Dist: pycycling>=0.3.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: uvicorn[standard]>=0.22.0
+Requires-Dist: websockets>=11.0
+
+# Zantas: Cycling Trainer Application
+
+A Zwift-equivalent local cycling trainer application that connects to BLE heart rate monitors, power meters, and Wahoo Kickr trainers (FTMS), allowing manual or workout-driven resistance control.
