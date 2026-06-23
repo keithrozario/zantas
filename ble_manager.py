@@ -168,8 +168,9 @@ class BLEManager:
                 if self.hrm_bpm > 0:
                     self._empty_rr_count += 1
                     # If 5 consecutive updates have no RR data, flag it
-                    if self._empty_rr_count >= 5:
+                    if self._empty_rr_count >= 5 and self.rr_data_supported:
                         self.rr_data_supported = False
+                        print("[BLE] Warning: Connected HRM does not transmit RR-Interval (HRV) telemetry.")
 
         while self._running:
             self.hrm_connected = False
