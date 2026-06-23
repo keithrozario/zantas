@@ -657,6 +657,14 @@ canvas {
     font-family: var(--font-mono) !important;
 }
 
+.warning-text {
+    color: var(--accent-red);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* Responsiveness */
 @media (max-width: 900px) {
     .hr-card, .hrv-card, .controls-card {

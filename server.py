@@ -73,6 +73,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "hrm_connected": ble_manager.hrm_connected,
                 "hrv_rmssd": round(ble_manager.hrv_rmssd, 1),
                 "rr_intervals": [round(val, 1) for _, val in ble_manager.rr_history],
+                "rr_data_supported": ble_manager.rr_data_supported,
                 "power_watts": ble_manager.power_watts,
                 "cadence_rpm": ble_manager.cadence_rpm,
                 "trainer_connected": ble_manager.trainer_connected,

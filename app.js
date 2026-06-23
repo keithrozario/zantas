@@ -232,7 +232,11 @@ function updateDashboard(data) {
     const progressPercent = Math.min((lastRrIntervals.length / targetBeats) * 100, 100);
     hrvProgressBar.style.width = `${progressPercent}%`;
     
-    if (lastRrIntervals.length < 5) {
+    if (data.rr_data_supported === false) {
+        hrvVal.textContent = 'N/A';
+        hrvStatusDesc.innerHTML = '<span class="warning-text"><i class="fa-solid fa-triangle-exclamation"></i> HRV Not Supported</span>';
+        hrvProgressBar.style.width = '0%';
+    } else if (lastRrIntervals.length < 5) {
         hrvVal.textContent = '--';
         hrvStatusDesc.textContent = 'Collecting initial beats...';
     } else if (lastRrIntervals.length < targetBeats) {

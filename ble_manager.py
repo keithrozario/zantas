@@ -15,6 +15,8 @@ class BLEManager:
         self.hrm_bpm = 0
         self.hrm_connected = False
         self.hrv_rmssd = 0.0
+        self.rr_data_supported = True
+        self._empty_rr_count = 0
         
         # RR-intervals history: list of (timestamp, interval_ms)
         self.rr_history = []
@@ -53,6 +55,8 @@ class BLEManager:
             # Reset history
             self.rr_history = []
             self.hrv_rmssd = 0.0
+            self.rr_data_supported = True
+            self._empty_rr_count = 0
             
             if target == "simulator":
                 self.simulate = True
@@ -156,8 +160,16 @@ class BLEManager:
         def hr_handler(measurement):
             self.hrm_bpm = measurement.bpm
             if measurement.rr_interval:
+                self._empty_rr_count = 0
+                self.rr_data_supported = True
                 intervals_ms = [raw * 1000.0 / 1024.0 for raw in measurement.rr_interval]
                 self._add_rr_intervals(intervals_ms)
+            else:
+                if self.hrm_bpm > 0:
+                    self._empty_rr_count += 1
+                    # If 5 consecutive updates have no RR data, flag it
+                    if self._empty_rr_count >= 5:
+                        self.rr_data_supported = False
 
         while self._running:
             self.hrm_connected = False
