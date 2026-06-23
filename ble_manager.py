@@ -1,9 +1,30 @@
 import asyncio
+import logging
 import math
 import random
 import time
 from bleak import BleakClient, BleakScanner
 from pycycling.heart_rate_service import HeartRateService
+
+# Setup local file logging
+logger = logging.getLogger("zantas")
+logger.setLevel(logging.DEBUG)
+
+# Clear existing handlers to avoid duplicates
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+file_handler = logging.FileHandler("zantas.log")
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+# Also log warning to stderr/stdout
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 class BLEManager:
     def __init__(self, hrm_address=None, simulate=False):
@@ -151,15 +172,20 @@ class BLEManager:
 
     async def _run_ble(self):
         if not self.hrm_address:
-            print("No HRM address specified. BLE manager idling.")
+            logger.info("No HRM address specified. BLE manager idling.")
             self.hrm_connected = False
             return
             
-        print(f"Starting BLE Manager, targeting HRM address: {self.hrm_address}")
+        logger.info(f"Starting BLE Manager, targeting HRM address: {self.hrm_address}")
         
         def hr_handler(measurement):
             self.hrm_bpm = measurement.bpm
+            # Log the raw data fields of every packet to the log file
+            logger.debug(f"[HRM Payload] bpm={measurement.bpm} rr_interval={measurement.rr_interval}")
+            
             if measurement.rr_interval:
+                if not self.rr_data_supported or self._empty_rr_count > 0:
+                    logger.info("HRV data captured from device: Yes (RR-intervals present)")
                 self._empty_rr_count = 0
                 self.rr_data_supported = True
                 intervals_ms = [raw * 1000.0 / 1024.0 for raw in measurement.rr_interval]
@@ -170,15 +196,15 @@ class BLEManager:
                     # If 5 consecutive updates have no RR data, flag it
                     if self._empty_rr_count >= 5 and self.rr_data_supported:
                         self.rr_data_supported = False
-                        print("[BLE] Warning: Connected HRM does not transmit RR-Interval (HRV) telemetry.")
+                        logger.warning("HRV data captured from device: No (RR-interval telemetry missing)")
 
         while self._running:
             self.hrm_connected = False
             try:
-                print(f"Connecting to HRM: {self.hrm_address}...")
+                logger.info(f"Connecting to HRM: {self.hrm_address}...")
                 async with BleakClient(self.hrm_address) as client:
                     self.hrm_connected = True
-                    print(f"Connected to HRM: {self.hrm_address}")
+                    logger.info(f"Connected to HRM: {self.hrm_address}")
                     
                     hr_service = HeartRateService(client)
                     hr_service.set_hr_measurement_handler(hr_handler)
@@ -187,7 +213,7 @@ class BLEManager:
                     while self._running and client.is_connected:
                         await asyncio.sleep(1)
                         
-                    print("HRM disconnected.")
+                    logger.info("HRM disconnected.")
             except Exception as e:
-                print(f"HRM connection error: {e}. Retrying in 5 seconds...")
+                logger.error(f"HRM connection error: {e}. Retrying in 5 seconds...")
                 await asyncio.sleep(5)
